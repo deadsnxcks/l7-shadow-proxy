@@ -17,6 +17,12 @@ func main() {
 		}
 		req.ContentLength = r.ContentLength
 
+		for key, values := range r.Header {
+			for _, value := range values {
+				req.Header.Add(key, value)
+			}
+		}
+
 		resp, err := http.DefaultTransport.RoundTrip(req)
 		if err != nil {
 			log.Printf("backend error: %v", err)
@@ -25,6 +31,14 @@ func main() {
 		}
 
 		defer resp.Body.Close()
+
+		for key, values := range resp.Header {
+			for _, value := range values {
+				w.Header().Add(key, value)
+			}
+		}
+
+		w.WriteHeader(resp.StatusCode)
 
 		io.Copy(w, resp.Body)
 	})
