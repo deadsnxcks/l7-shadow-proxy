@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -24,7 +25,28 @@ func main() {
 			return
 		}
 
+		w.Header().Set("X-Backend", *name)
 		fmt.Fprintf(w, "Hello from %s\n", *name)
+	})
+
+	http.HandleFunc("/status/{code}", func(w http.ResponseWriter, r *http.Request) {
+		logRequest(*name, r)
+		w.Header().Set("X-Backend", *name)
+
+		if !wait(r.Context(), *delay) {
+			log.Printf("[%s] %s %s: canceled (%v)", *name, r.Method, r.URL.RequestURI(), r.Context().Err())
+			return
+		}
+
+		codeStr := r.PathValue("code")
+
+		code, err := strconv.Atoi(codeStr)
+		if err != nil || code < 200 || code > 599 {
+			http.Error(w, "Invalid status code", http.StatusBadRequest)
+			return
+		}
+
+		w.WriteHeader(code)
 	})
 
 	addr := fmt.Sprintf(":%d", *port)
