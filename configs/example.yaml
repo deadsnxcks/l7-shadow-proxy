@@ -1,0 +1,45 @@
+server:
+  address: ":8080"
+
+metrics:
+  address: ":9090"
+
+defaults:
+  timeout: 5s
+
+mirroring:
+  queue_size: 1000
+  workers: 8
+  timeout: 1s
+  max_body_bytes: 1048576
+
+routes:
+  - name: health
+    exact: /health
+    backend: http://health:9000
+
+  - name: api
+    prefix: /api/
+    backend: http://api-v1:9001
+    timeout: 2s
+    fallback: http://api-v1-backup:9001
+    mirror:
+      backend: http://api-v2:9002
+      percent: 10
+    limit:
+      rps: 100
+      burst: 200
+
+  - name: api-beta
+    prefix: /api/
+    headers:
+      X-Version: beta
+    backend: http://api-v2:9002
+
+  - name: users
+    regex: "^/users/[0-9]+$"
+    backend: http://users:9001
+
+  - name: default
+    prefix: /
+    backend: http://default:9000
