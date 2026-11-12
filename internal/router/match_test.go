@@ -9,15 +9,24 @@ import (
 	"github.com/deadsnxcks/l7-shadow-proxy/internal/router"
 )
 
-// buildLinear собирает простую стратегию поиска из правил конфига.
-func buildLinear(t *testing.T, routes []config.Route) *router.Linear {
+// strategies — все стратегии поиска. Каждый тест прогоняется на каждой из них.
+var strategies = []struct {
+	name       string
+	newMatcher func([]*router.Route) router.Matcher
+}{
+	{"linear", func(rs []*router.Route) router.Matcher { return router.NewLinear(rs) }},
+	{"indexed", func(rs []*router.Route) router.Matcher { return router.NewIndexed(rs) }},
+}
+
+// buildMatcher собирает стратегию поиска из правил конфига.
+func buildMatcher(t *testing.T, newMatcher func([]*router.Route) router.Matcher, routes []config.Route) router.Matcher {
 	t.Helper()
 
 	built, err := router.Build(&config.Config{Routes: routes})
 	if err != nil {
 		t.Fatalf("build: %v", err)
 	}
-	return router.NewLinear(built)
+	return newMatcher(built)
 }
 
 // exampleRoutes — правила как в example.yaml плюс api-admin для проверки длины префикса.
@@ -32,8 +41,7 @@ func exampleRoutes() []config.Route {
 	}
 }
 
-func TestLinearMatch(t *testing.T) {
-	m := buildLinear(t, exampleRoutes())
+func TestMatch(t *testing.T) {
 	beta := map[string]string{"X-Version": "beta"}
 
 	tests := []struct {
@@ -68,50 +76,64 @@ func TestLinearMatch(t *testing.T) {
 		{name: "prefix is compared as a whole", path: "/apiv2", want: "default"},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			method := tc.method
-			if method == "" {
-				method = http.MethodGet
-			}
+	for _, s := range strategies {
+		t.Run(s.name, func(t *testing.T) {
+			m := buildMatcher(t, s.newMatcher, exampleRoutes())
 
-			r := httptest.NewRequest(method, tc.path, nil)
-			for k, v := range tc.headers {
-				r.Header.Set(k, v)
-			}
+			for _, tc := range tests {
+				t.Run(tc.name, func(t *testing.T) {
+					method := tc.method
+					if method == "" {
+						method = http.MethodGet
+					}
 
-			got := ""
-			if route := m.Match(r); route != nil {
-				got = route.Name
-			}
-			if got != tc.want {
-				t.Errorf("%s %s: want %q, got %q", method, tc.path, tc.want, got)
+					r := httptest.NewRequest(method, tc.path, nil)
+					for k, v := range tc.headers {
+						r.Header.Set(k, v)
+					}
+
+					got := ""
+					if route := m.Match(r); route != nil {
+						got = route.Name
+					}
+					if got != tc.want {
+						t.Errorf("%s %s: want %q, got %q", method, tc.path, tc.want, got)
+					}
+				})
 			}
 		})
 	}
 }
 
 // Уровень 4: при полном равенстве побеждает правило выше в файле.
-func TestLinearMatch_RegexOrder(t *testing.T) {
-	m := buildLinear(t, []config.Route{
-		{Name: "first", Regex: "^/a", Backend: "http://a:9000"},
-		{Name: "second", Regex: "^/a/b", Backend: "http://b:9000"},
-	})
+func TestMatch_RegexOrder(t *testing.T) {
+	for _, s := range strategies {
+		t.Run(s.name, func(t *testing.T) {
+			m := buildMatcher(t, s.newMatcher, []config.Route{
+				{Name: "first", Regex: "^/a", Backend: "http://a:9000"},
+				{Name: "second", Regex: "^/a/b", Backend: "http://b:9000"},
+			})
 
-	r := httptest.NewRequest(http.MethodGet, "/a/b", nil)
-	if got := m.Match(r); got == nil || got.Name != "first" {
-		t.Errorf("want route first, got %+v", got)
+			r := httptest.NewRequest(http.MethodGet, "/a/b", nil)
+			if got := m.Match(r); got == nil || got.Name != "first" {
+				t.Errorf("want route first, got %+v", got)
+			}
+		})
 	}
 }
 
 // Без маршрута по умолчанию неподходящий запрос не находит ничего.
-func TestLinearMatch_NoRoute(t *testing.T) {
-	m := buildLinear(t, []config.Route{
-		{Name: "api", Prefix: "/api/", Backend: "http://api:9001"},
-	})
+func TestMatch_NoRoute(t *testing.T) {
+	for _, s := range strategies {
+		t.Run(s.name, func(t *testing.T) {
+			m := buildMatcher(t, s.newMatcher, []config.Route{
+				{Name: "api", Prefix: "/api/", Backend: "http://api:9001"},
+			})
 
-	r := httptest.NewRequest(http.MethodGet, "/unknown", nil)
-	if got := m.Match(r); got != nil {
-		t.Errorf("want nil, got %q", got.Name)
+			r := httptest.NewRequest(http.MethodGet, "/unknown", nil)
+			if got := m.Match(r); got != nil {
+				t.Errorf("want nil, got %q", got.Name)
+			}
+		})
 	}
 }

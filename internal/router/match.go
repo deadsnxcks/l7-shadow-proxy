@@ -5,6 +5,10 @@ import (
 	"strings"
 )
 
+type Matcher interface {
+	Match(r *http.Request) *Route
+}
+
 func (rt *Route) matches(r *http.Request) bool {
 	switch rt.Kind {
 	case MatchExact:
