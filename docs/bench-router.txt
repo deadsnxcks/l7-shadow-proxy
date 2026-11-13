@@ -1,0 +1,66 @@
+goos: linux
+goarch: amd64
+pkg: github.com/deadsnxcks/l7-shadow-proxy/internal/router
+cpu: Intel(R) Core(TM) i5-8265U CPU @ 1.60GHz
+BenchmarkMatch/linear/rules=10-4         	14219125	       116.1 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=10-4         	12167647	        96.55 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=10-4         	13948162	        86.52 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=10-4         	11516124	       116.9 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=10-4         	11559933	        95.66 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=10-4         	13576485	        89.43 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=10-4         	14286456	        83.72 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=10-4         	13605410	       120.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=10-4         	11677165	        97.29 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=10-4         	13253193	        84.31 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=10-4        	 6198332	       200.0 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=10-4        	 6199540	       206.9 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=10-4        	 4402573	       309.9 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=10-4        	 5368448	       206.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=10-4        	 6143437	       192.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=10-4        	 6205809	       200.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=10-4        	 5659034	       202.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=10-4        	 5545264	       209.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=10-4        	 5449108	       201.9 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=10-4        	 5672139	       195.9 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=100-4        	 2158234	       596.2 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=100-4        	 2148469	       654.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=100-4        	 2012911	       564.8 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=100-4        	 2144840	       538.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=100-4        	 2230554	       561.8 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=100-4        	 2082448	       580.3 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=100-4        	 2167344	       532.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=100-4        	 2225594	       585.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=100-4        	 1958054	       583.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=100-4        	 1898334	       612.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=100-4       	 5124495	       263.9 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=100-4       	 2921356	       361.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=100-4       	 4080452	       256.8 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=100-4       	 5365323	       248.2 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=100-4       	 4794038	       228.3 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=100-4       	 5130056	       221.9 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=100-4       	 5632954	       218.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=100-4       	 5154114	       223.1 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=100-4       	 5376408	       253.8 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=100-4       	 5159149	       253.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=1000-4       	  207492	      5237 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=1000-4       	  242695	      4889 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=1000-4       	  222148	      6009 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=1000-4       	  216391	      5437 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=1000-4       	  221996	      5121 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=1000-4       	  244110	      5180 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=1000-4       	  247285	      5121 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=1000-4       	  216876	      5165 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=1000-4       	  238892	      6514 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/linear/rules=1000-4       	  213031	      5579 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=1000-4      	 3507697	       350.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=1000-4      	 3413232	       334.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=1000-4      	 4684718	       267.1 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=1000-4      	 3788830	       315.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=1000-4      	 3963148	       359.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=1000-4      	 3960218	       301.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=1000-4      	 3811165	       310.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=1000-4      	 3712442	       321.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=1000-4      	 4409808	       283.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMatch/indexed/rules=1000-4      	 4316323	       280.2 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/deadsnxcks/l7-shadow-proxy/internal/router	73.693s
