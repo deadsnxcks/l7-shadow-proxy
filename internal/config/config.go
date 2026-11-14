@@ -13,6 +13,7 @@ import (
 )
 
 type Config struct {
+	Env       string    `yaml:"env"`
 	Server    Server    `yaml:"server"`
 	Metrics   Metrics   `yaml:"metrics"`
 	Defaults  Defaults  `yaml:"defaults"`
@@ -21,7 +22,10 @@ type Config struct {
 }
 
 type Server struct {
-	Address string `yaml:"address"`
+	Address           string        `yaml:"address"`
+	ReadHeaderTimeout time.Duration `yaml:"read_header_timeout"`
+	IdleTimeout       time.Duration `yaml:"idle_timeout"`
+	ShutdownTimeout   time.Duration `yaml:"shutdown_timeout"`
 }
 
 type Metrics struct {
@@ -100,6 +104,18 @@ func applyDefaults(cfg *Config) {
 		cfg.Server.Address = ":8080"
 	}
 
+	if cfg.Server.ReadHeaderTimeout == 0 {
+		cfg.Server.ReadHeaderTimeout = 5 * time.Second
+	}
+
+	if cfg.Server.IdleTimeout == 0 {
+		cfg.Server.IdleTimeout = 60 * time.Second
+	}
+
+	if cfg.Server.ShutdownTimeout == 0 {
+		cfg.Server.ShutdownTimeout = 5 * time.Second
+	}
+
 	if cfg.Metrics.Address == "" {
 		cfg.Metrics.Address = ":9090"
 	}
@@ -137,6 +153,15 @@ func applyDefaults(cfg *Config) {
 
 func validate(cfg *Config) error {
 	var errs []error
+
+	if cfg.Env == "" {
+		errs = append(errs, fmt.Errorf("env must not be empty"))
+	}
+
+	if cfg.Env != "local" && cfg.Env != "dev" && cfg.Env != "prod" {
+		errs = append(errs, fmt.Errorf("env must be one of 'local', 'dev', or 'prod'"))
+	}
+
 	_, portSrv, errSrv := net.SplitHostPort(cfg.Server.Address)
 	if errSrv != nil {
 		errs = append(errs, fmt.Errorf("invalid server address format: %w", errSrv))
@@ -149,6 +174,18 @@ func validate(cfg *Config) error {
 
 	if errSrv == nil && errMtr == nil && portSrv == portMtr {
 		errs = append(errs, errors.New("server and metrics must use different ports"))
+	}
+
+	if cfg.Server.ReadHeaderTimeout < 0 {
+		errs = append(errs, fmt.Errorf("server.read_header_timeout must be positive"))
+	}
+
+	if cfg.Server.IdleTimeout < 0 {
+		errs = append(errs, fmt.Errorf("server.idle_timeout must be positive"))
+	}
+
+	if cfg.Server.ShutdownTimeout < 0 {
+		errs = append(errs, fmt.Errorf("server.shutdown_timeout must be positive"))
 	}
 
 	if cfg.Defaults.Timeout < 0 {

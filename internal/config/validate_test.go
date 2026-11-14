@@ -8,6 +8,7 @@ import (
 
 func validConfig() *Config {
 	return &Config{
+		Env:       "local",
 		Server:    Server{Address: ":8080"},
 		Metrics:   Metrics{Address: ":9090"},
 		Defaults:  Defaults{Timeout: 5 * time.Second},
