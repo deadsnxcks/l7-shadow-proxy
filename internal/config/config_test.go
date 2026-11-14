@@ -37,6 +37,7 @@ func TestConfig(t *testing.T) {
 
 func TestLoad_RouteInheritsDefaultTimeout(t *testing.T) {
 	path := writeConfig(t, `
+env: "local"
 defaults:
   timeout: 3s
 routes:
@@ -58,6 +59,7 @@ routes:
 
 func TestLoad_UnknownFieldFails(t *testing.T) {
 	path := writeConfig(t, `
+env: "local"
 routes:
   - name: api
     prefix: /api/
@@ -72,6 +74,7 @@ routes:
 
 func TestLoad_NotSetDefaults(t *testing.T) {
 	path := writeConfig(t, `
+env: "local"
 routes:
   - name: api
     prefix: /api/
@@ -91,6 +94,7 @@ routes:
 
 func TestLoad_NotSetMirroring(t *testing.T) {
 	path := writeConfig(t, `
+env: "local"
 routes:
   - name: api
     prefix: /api/

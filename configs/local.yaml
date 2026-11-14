@@ -1,0 +1,26 @@
+env: "loca"
+server:
+  address: ":8080"
+  read_header_timeout: 5s
+  idle_timeout: 60s
+  shutdown_timeout: 5s
+metrics:
+  address: ":9090"
+routes:
+  - name: health
+    exact: /health
+    backend: http://localhost:9205
+  - name: api
+    prefix: /api/
+    backend: http://localhost:9202
+  - name: api-beta
+    prefix: /api/
+    headers:
+      X-Version: beta
+    backend: http://localhost:9203
+  - name: users
+    regex: "^/users/[0-9]+$"
+    backend: http://localhost:9204
+  - name: default
+    prefix: /
+    backend: http://localhost:9201

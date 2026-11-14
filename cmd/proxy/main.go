@@ -1,89 +1,58 @@
 package main
 
 import (
-	"io"
-	"log"
-	"net"
-	"net/http"
-	"strings"
+	"context"
+	"flag"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/deadsnxcks/l7-shadow-proxy/internal/app"
+	"github.com/deadsnxcks/l7-shadow-proxy/internal/config"
+	"github.com/deadsnxcks/l7-shadow-proxy/internal/logger/sl"
 )
 
-const backendURL = "http://localhost:9002"
+const service = "l7-shadow-proxy"
 
-var hopHeaders = []string{
-	"Connection",
-	"Proxy-Connection",
-	"Keep-Alive",
-	"Proxy-Authenticate",
-	"Proxy-Authorization",
-	"TE",
-	"Trailer",
-	"Transfer-Encoding",
-	"Upgrade",
-}
+var version = "dev"
 
 func main() {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		req, err := http.NewRequestWithContext(r.Context(), r.Method, backendURL+r.URL.RequestURI(), r.Body)
-		if err != nil {
-			log.Printf("failed to create request: %v", err)
-			http.Error(w, "internal error", http.StatusInternalServerError)
-			return
-		}
-		req.ContentLength = r.ContentLength
+	configPath := flag.String("config", "configs/example.yaml", "path to proxy config")
+	flag.Parse()
 
-		copyHeaders(req.Header, r.Header)
-		removeHopByHop(req.Header)
+	cfg := config.MustLoad(*configPath)
 
-		if clientIP, _, err := net.SplitHostPort(r.RemoteAddr); err == nil {
-			appendForwardedFor(req.Header, clientIP)
-		} else {
-			log.Printf("failed to parse remote addr %q: %v", r.RemoteAddr, err)
-		}
-
-		resp, err := http.DefaultTransport.RoundTrip(req)
-		if err != nil {
-			log.Printf("backend error: %v", err)
-			http.Error(w, "bad gateway", http.StatusBadGateway)
-			return
-		}
-		defer resp.Body.Close()
-
-		copyHeaders(w.Header(), resp.Header)
-		removeHopByHop(w.Header())
-		w.WriteHeader(resp.StatusCode)
-
-		if _, err := io.Copy(w, resp.Body); err != nil {
-			log.Printf("failed to copy response body: %v", err)
-		}
+	log := sl.NewLogger(sl.Config{
+		Env:     cfg.Env,
+		Service: service,
+		Version: version,
 	})
 
-	log.Fatal(http.ListenAndServe(":8080", mux))
-}
+	log.Info("starting app...")
 
-func removeHopByHop(h http.Header) {
-	for _, line := range h.Values("Connection") {
-		for _, token := range strings.Split(line, ",") {
-			h.Del(strings.TrimSpace(token))
-		}
-	}
-	for _, header := range hopHeaders {
-		h.Del(header)
-	}
-}
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
+	defer cancel()
 
-func copyHeaders(dst, src http.Header) {
-	for key, values := range src {
-		for _, value := range values {
-			dst.Add(key, value)
-		}
+	application, err := app.New(log, cfg)
+	if err != nil {
+		log.Error("failed to init app", sl.Err(err))
+		cancel()
+		//nolint:gocritic
+		os.Exit(1)
 	}
-}
 
-func appendForwardedFor(h http.Header, clientIP string) {
-	if prior := h.Values("X-Forwarded-For"); len(prior) > 0 {
-		clientIP = strings.Join(prior, ", ") + ", " + clientIP
+	application.MustRun()
+
+	<-ctx.Done()
+
+	log.Info("shutting down server...")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.Server.ShutdownTimeout)
+	defer cancel()
+
+	if err := application.Stop(shutdownCtx); err != nil {
+		log.Error("failed to stop server gracefully", sl.Err(err))
 	}
-	h.Set("X-Forwarded-For", clientIP)
+
+	log.Info("server stopped")
 }
