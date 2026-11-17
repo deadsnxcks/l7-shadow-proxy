@@ -5,13 +5,10 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
 
 	httpserverapp "github.com/deadsnxcks/l7-shadow-proxy/internal/app/httpserver"
+	"github.com/deadsnxcks/l7-shadow-proxy/internal/app/reloader"
 	"github.com/deadsnxcks/l7-shadow-proxy/internal/config"
-	"github.com/deadsnxcks/l7-shadow-proxy/internal/logger/sl"
 	"github.com/deadsnxcks/l7-shadow-proxy/internal/pipeline"
 	"github.com/deadsnxcks/l7-shadow-proxy/internal/proxy"
 	"github.com/deadsnxcks/l7-shadow-proxy/internal/router"
@@ -23,6 +20,7 @@ type App struct {
 	log        *slog.Logger
 	rtr        *router.Router
 	configPath string
+	reloader   *reloader.Reloader
 }
 
 func New(
@@ -48,12 +46,9 @@ func New(
 
 	server := httpserverapp.New(log, cfg.Server, handler)
 
-	return &App{
-		server:     server,
-		log:        log,
-		rtr:        rtr,
-		configPath: cfgPath,
-	}, nil
+	a := &App{server: server, log: log, rtr: rtr, configPath: cfgPath}
+	a.reloader = reloader.New(log, cfgPath, a.reloadConfig)
+	return a, nil
 }
 
 func (a *App) MustRun() {
@@ -61,7 +56,7 @@ func (a *App) MustRun() {
 	a.cancel = cancel
 
 	go a.server.MustRun()
-	go a.watchSIGHUP(ctx)
+	go a.reloader.Run(ctx)
 }
 
 func (a *App) Stop(ctx context.Context) error {
@@ -71,8 +66,8 @@ func (a *App) Stop(ctx context.Context) error {
 	return a.server.Stop(ctx)
 }
 
-func (a *App) Reload() error {
-	const op = "app.Reload"
+func (a *App) reloadConfig() error {
+	const op = "app.reloadConfig"
 
 	log := a.log.With(slog.String("op", op))
 
@@ -91,24 +86,4 @@ func (a *App) Reload() error {
 	log.Info("routes updated", slog.Int("count", len(routes)))
 
 	return nil
-}
-
-func (a *App) watchSIGHUP(ctx context.Context) {
-	ch := make(chan os.Signal, 1)
-
-	signal.Notify(ch, syscall.SIGHUP)
-
-	defer signal.Stop(ch)
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ch:
-			err := a.Reload()
-			if err != nil {
-				a.log.Error("failed reload", sl.Err(err))
-			}
-		}
-	}
 }

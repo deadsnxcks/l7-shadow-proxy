@@ -74,7 +74,7 @@ func TestReload(t *testing.T) {
 
 	// правильный новый конфиг применяется
 	writeFile(t, path, configB)
-	if err := a.Reload(); err != nil {
+	if err := a.reloadConfig(); err != nil {
 		t.Fatalf("reload: %v", err)
 	}
 	if got := matchName(a); got != "b" {
@@ -83,7 +83,7 @@ func TestReload(t *testing.T) {
 
 	// сломанный конфиг не применяется, работаем на прежнем
 	writeFile(t, path, configBroken)
-	if err := a.Reload(); err == nil {
+	if err := a.reloadConfig(); err == nil {
 		t.Fatal("want error for broken config, got nil")
 	}
 	if got := matchName(a); got != "b" {
