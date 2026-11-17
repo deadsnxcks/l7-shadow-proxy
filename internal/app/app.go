@@ -73,12 +73,12 @@ func (a *App) reloadConfig() error {
 
 	cfg, err := config.Load(a.configPath)
 	if err != nil {
-		return fmt.Errorf("%s load config: %w", op, err)
+		return fmt.Errorf("%s: load config: %w", op, err)
 	}
 
 	routes, err := router.Build(cfg)
 	if err != nil {
-		return fmt.Errorf("%s build routes: %w", op, err)
+		return fmt.Errorf("%s: build routes: %w", op, err)
 	}
 
 	a.rtr.Update(router.NewIndexed(routes))

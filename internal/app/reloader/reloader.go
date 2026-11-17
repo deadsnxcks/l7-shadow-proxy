@@ -47,15 +47,15 @@ func (r *Reloader) Run(ctx context.Context) {
 
 	configName := filepath.Base(r.path)
 
-	var debounce *time.Timer
-	var debounceC <-chan time.Time
+	var timer *time.Timer
+	var timerC <-chan time.Time
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-sigCh:
-			r.reload()
+			r.reloadAndLog()
 		case ev, ok := <-events:
 			if !ok {
 				events = nil
@@ -70,15 +70,15 @@ func (r *Reloader) Run(ctx context.Context) {
 				continue
 			}
 
-			if debounce == nil {
-				debounce = time.NewTimer(300 * time.Millisecond)
+			if timer == nil {
+				timer = time.NewTimer(r.debounce)
 			} else {
-				debounce.Reset(300 * time.Millisecond)
+				timer.Reset(r.debounce)
 			}
-			debounceC = debounce.C
+			timerC = timer.C
 
-		case <-debounceC:
-			r.reload()
+		case <-timerC:
+			r.reloadAndLog()
 		case err, ok := <-watchErrs:
 			if !ok {
 				watchErrs = nil
@@ -99,4 +99,10 @@ func (r *Reloader) watchConfigDir() (*fsnotify.Watcher, error) {
 		return nil, err
 	}
 	return watcher, nil
+}
+
+func (r *Reloader) reloadAndLog() {
+	if err := r.reload(); err != nil {
+		r.log.Error("config reload failed", sl.Err(err))
+	}
 }
