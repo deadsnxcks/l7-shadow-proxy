@@ -33,7 +33,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	defer cancel()
 
-	application, err := app.New(log, cfg)
+	application, err := app.New(log, cfg, *configPath)
 	if err != nil {
 		log.Error("failed to init app", sl.Err(err))
 		cancel()
