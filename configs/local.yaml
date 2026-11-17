@@ -1,4 +1,4 @@
-env: "loca"
+env: "local"
 server:
   address: ":8080"
   read_header_timeout: 5s
