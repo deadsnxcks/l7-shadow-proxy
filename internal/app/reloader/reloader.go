@@ -49,12 +49,21 @@ func (r *Reloader) Run(ctx context.Context) {
 
 	var timer *time.Timer
 	var timerC <-chan time.Time
+	defer func() {
+		if timer != nil {
+			timer.Stop()
+		}
+	}()
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-sigCh:
+			if timer != nil && timerC != nil {
+				timer.Stop()
+				timerC = nil
+			}
 			r.reloadAndLog()
 		case ev, ok := <-events:
 			if !ok {
